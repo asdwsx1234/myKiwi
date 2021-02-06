@@ -51,8 +51,8 @@ export function findAllI18N() {
     }
 
     const [target, ...restKeys] = foundItem.keys;
-    const uri = vscode.Uri.file(path.join(LANG_PREFIX, target + '.ts'));
-    const content = (await fs.readFile(path.join(LANG_PREFIX, target + '.ts'))).toString('utf8');
+    const uri = vscode.Uri.file(path.join(LANG_PREFIX, target + '.js'));
+    const content = (await fs.readFile(path.join(LANG_PREFIX, target + '.js'))).toString('utf8');
 
     const preCodeContent = '"' + restKeys[restKeys.length - 1] + '"';
     const newCodeContent = ' ' + restKeys[restKeys.length - 1] + ':';

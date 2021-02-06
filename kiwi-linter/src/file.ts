@@ -10,14 +10,21 @@ import { getLangData } from './getLangData';
 import { LANG_PREFIX } from './const';
 import { getConfiguration } from './utils';
 
-export function updateLangFiles(keyValue: string, text: string, validateDuplicate: boolean) {
-  if (!keyValue.startsWith('I18N.')) {
-    return;
-  }
+/** 
+ * sample 
+ * keyValue: deviceList.clear
+ * text: clear
+ * 
+ **/ 
 
-  const [, filename, ...restPath] = keyValue.split('.');
-  const fullKey = restPath.join('.');
-  const targetFilename = `${LANG_PREFIX}${filename}.ts`;
+export function updateLangFiles(keyValue: string, text: string, validateDuplicate: boolean) {
+  // if (!keyValue.startsWith('I18N.')) {
+  //   return;
+  // }
+
+  const [filename] = keyValue.split('.');
+  const fullKey = keyValue;
+  const targetFilename = `${LANG_PREFIX}${filename}.js`;
 
   if (!fs.existsSync(targetFilename)) {
     fs.outputFileSync(targetFilename, generateNewLangFile(fullKey, text));
@@ -38,7 +45,7 @@ export function updateLangFiles(keyValue: string, text: string, validateDuplicat
     }
     // \n 会被自动转义成 \\n，这里转回来
     text = text.replace(/\\n/gm, '\n');
-    _.set(obj, fullKey, text);
+    obj[fullKey] = text;
     fs.writeFileSync(targetFilename, prettierFile(`export default ${JSON.stringify(obj, null, 2)}`));
   }
 }
@@ -60,26 +67,28 @@ function prettierFile(fileContent) {
 }
 
 export function generateNewLangFile(key: string, value: string) {
-  const obj = _.set({}, key, value);
-
+  const obj = {
+    [key]: value,
+  }
   return prettierFile(`export default ${JSON.stringify(obj, null, 2)}`);
 }
 
+const MAIN_LANG_FILE_PATH = LANG_PREFIX.replace('/en-US', '');
 export function addImportToMainLangFile(newFilename: string) {
   let mainContent = '';
-  if (fs.existsSync(`${LANG_PREFIX}index.ts`)) {
-    mainContent = fs.readFileSync(`${LANG_PREFIX}index.ts`, 'utf8');
-    mainContent = mainContent.replace(/^(\s*import.*?;)$/m, `$1\nimport ${newFilename} from './${newFilename}';`);
-    if (/\,\n(}\);)/.test(mainContent)) {
+  if (fs.existsSync(`${MAIN_LANG_FILE_PATH}en-US.js`)) {
+    mainContent = fs.readFileSync(`${MAIN_LANG_FILE_PATH}en-US.js`, 'utf8');
+    mainContent = mainContent.replace(/^(\s*import.*?;)$/m, `$1\nimport ${newFilename} from './en-US/${newFilename}';`);
+    if (/\,\n(};)/.test(mainContent)) {
       /** 最后一行包含,号 */
-      mainContent = mainContent.replace(/(}\);)/, `  ${newFilename},\n$1`);
+      mainContent = mainContent.replace(/(};)/, `  ...${newFilename},\n$1`);
     } else {
       /** 最后一行不包含,号 */
-      mainContent = mainContent.replace(/\n(}\);)/, `,\n  ${newFilename},\n$1`);
+      mainContent = mainContent.replace(/\n(};)/, `,\n  ...${newFilename},\n$1`);
     }
   } else {
-    mainContent = `import ${newFilename} from './${newFilename}';\n\nexport default Object.assign({}, {\n  ${newFilename},\n});`;
+    mainContent = `import ${newFilename} from './${newFilename}';\n\nexport default {\n  ...${newFilename},\n};`;
   }
 
-  fs.outputFileSync(`${LANG_PREFIX}index.ts`, mainContent);
+  fs.outputFileSync(`${MAIN_LANG_FILE_PATH}en-US.js`, mainContent);
 }

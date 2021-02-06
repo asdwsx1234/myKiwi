@@ -24,8 +24,8 @@ export function getI18N() {
     const filename = curr
       .split('/')
       .pop()
-      .replace(/\.tsx?$/, '');
-    if (filename.replace(/\.tsx?/, '') === 'index') {
+      .replace(/\.jsx?$/, '');
+    if (filename.replace(/\.jsx?/, '') === 'index') {
       return prev;
     }
 

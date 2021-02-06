@@ -10,7 +10,8 @@ import { getAllFiles, getConfiguration } from './utils';
  * 适配不同的语言文件夹位置
  */
 function dirAdaptor() {
-  const kiwiLangPerfix = `${vscode.workspace.rootPath}/.kiwi/zh-CN/`;
+  const kiwiLangPerfix = `${vscode.workspace.rootPath}/client/src/locales/en-US/`; // 只会到这儿
+  // const kiwiLangPerfix = `${vscode.workspace.rootPath}/.kiwi/zh-CN/`;
   const langPrefix = `${vscode.workspace.rootPath}/langs/zh-CN/`;
 
   /** 兼容 zh_CN 情况 */
@@ -29,6 +30,8 @@ function dirAdaptor() {
     const files = getAllFiles(`${vscode.workspace.rootPath}/`);
     const matchFiles = files.filter(fileName => {
       if (
+        fileName.includes('/src/locales/en-US/index.js') ||
+        fileName.includes('/src/locales/en-US/index.ts') ||
         fileName.includes('/.kiwi/zh-CN/index.ts') ||
         fileName.includes('/langs/zh-CN/index.ts') ||
         fileName.includes('/.kiwi/zh_CN/index.ts') ||
@@ -40,7 +43,7 @@ function dirAdaptor() {
     });
 
     if (matchFiles.length) {
-      return matchFiles[0].replace('index.ts', '');
+      return matchFiles[0].replace(/index\.[tj]s/, '');
     }
   }
 }
@@ -58,7 +61,8 @@ function getDefaultDir() {
 
 const LANG_PREFIX = getDefaultDir();
 const DIR_ADAPTOR = dirAdaptor();
-const I18N_GLOB = `${LANG_PREFIX}**/*.ts`;
+const I18N_GLOB = `${LANG_PREFIX}**/*.js`;
 const DOUBLE_BYTE_REGEX = /[^\x00-\xff]/g;
+const ENG_REG = /[a-zA-Z]/g;
 
-export { LANG_PREFIX, I18N_GLOB, DOUBLE_BYTE_REGEX, DIR_ADAPTOR };
+export { LANG_PREFIX, I18N_GLOB, ENG_REG, DOUBLE_BYTE_REGEX, DIR_ADAPTOR };

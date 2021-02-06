@@ -11,11 +11,12 @@ import { getSuggestLangObj } from './getLangData';
 import { I18N_GLOB, DIR_ADAPTOR } from './const';
 import { findAllI18N, findI18N } from './findAllI18N';
 import { findMatchKey } from './utils';
-import { triggerUpdateDecorations } from './chineseCharDecorations';
+// import { triggerUpdateDecorations } from './chineseCharDecorations';
+import { triggerUpdateDecorations } from './englishCharDecorations';
 import { TargetStr } from './define';
 import { replaceAndUpdate } from './replaceAndUpdate';
+import { translateAndReplace } from './translate';
 import { getConfiguration, getConfigFile, translateText } from './utils';
-
 /**
  * 主入口文件
  * @param context
@@ -87,15 +88,25 @@ export function activate(context: vscode.ExtensionContext) {
               const sameTextStrs = targetStrs.filter(t => t.text === targetStr.text);
               const text = targetStr.text;
               const actions = [];
+              actions.push({
+                title: '翻译',
+                command: 'vscode-i18n-linter.translate',
+                arguments: [
+                  {
+                    targets: sameTextStrs
+                  }
+                ]
+              });
+
               for (const key in finalLangObj) {
                 if (finalLangObj[key] === text) {
                   actions.push({
-                    title: `抽取为 \`I18N.${key}\``,
+                    title: `抽取为 \`${key}\``,
                     command: 'vscode-i18n-linter.extractI18N',
                     arguments: [
                       {
                         targets: sameTextStrs,
-                        varName: `I18N.${key}`
+                        varName: key.slice(key.indexOf('.') + 1) // 把key的filename拿掉
                       }
                     ]
                   });
@@ -129,13 +140,13 @@ export function activate(context: vscode.ExtensionContext) {
         // 否则要求用户输入变量名
         return resolve(
           vscode.window.showInputBox({
-            prompt: '请输入变量名，格式 `I18N.[page].[key]`，按 <回车> 启动替换',
-            value: `I18N.${suggestion.length ? suggestion.join('.') + '.' : ''}`,
-            validateInput(input) {
-              if (!input.match(/^I18N\.\w+\.\w+/)) {
-                return '变量名格式 `I18N.[page].[key]`，如 `I18N.dim.new`，[key] 中可包含更多 `.`';
-              }
-            }
+            prompt: '请输入formatMessageId',
+            value: ''
+            // validateInput(input) {
+            //   if (!input.match(/^I18N\.\w+\.\w+/)) {
+            //     return '变量名格式 `I18N.[page].[key]`，如 `I18N.dim.new`，[key] 中可包含更多 `.`';
+            //   }
+            // }
           })
         );
       }).then((val: string) => {
@@ -155,6 +166,37 @@ export function activate(context: vscode.ExtensionContext) {
           .then(
             () => {
               vscode.window.showInformationMessage(`成功替换 ${finalArgs.length} 处文案`);
+            },
+            err => {
+              console.log(err, 'err');
+            }
+          );
+      });
+    })
+  );
+
+  context.subscriptions.push(
+    vscode.commands.registerCommand('vscode-i18n-linter.translate', args => {
+      return new Promise(resolve => {
+        // 否则要求用户输入变量名
+        return resolve(
+          vscode.window.showInputBox({
+            prompt: '请输入目标语言',
+            value: ''
+          })
+        );
+      }).then((val: string) => {
+        const finalArgs = Array.isArray(args.targets) ? args.targets : [args.targets];
+        return finalArgs
+          .reverse()
+          .reduce((prev: Promise<any>, curr: TargetStr, index: number) => {
+            return prev.then(() => {
+              return translateAndReplace(curr, val);
+            });
+          }, Promise.resolve())
+          .then(
+            () => {
+              vscode.window.showInformationMessage(`成功翻译 ${finalArgs.length} 处文案`);
             },
             err => {
               console.log(err, 'err');

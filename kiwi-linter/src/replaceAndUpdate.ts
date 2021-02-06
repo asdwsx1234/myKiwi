@@ -31,16 +31,19 @@ export function replaceAndUpdate(arg: TargetStr, val: string, validateDuplicate:
     }
     const prevTextRange = new vscode.Range(startColPostion, arg.range.start);
     const [last2Char, last1Char] = document.getText(prevTextRange).split('');
-    let finalReplaceVal = val;
+    let finalReplaceVal = `formatMessage({ id: '${val}' })`;
+
+    //匹配="xxxx"
     if (last2Char === '=') {
       if (isHtmlFile) {
         finalReplaceVal = '{{' + val + '}}';
       } else if (isVueFile) {
         finalReplaceVal = '{{' + val + '}}';
       } else {
-        finalReplaceVal = '{' + val + '}';
+        finalReplaceVal = `{formatMessage({ id: '${val}' })}`
       }
     }
+    
     // 若是模板字符串，看看其中是否包含变量
     if (last1Char === '`') {
       const varInStr = arg.text.match(/(\$\{[^\}]+?\})/g);
@@ -48,7 +51,7 @@ export function replaceAndUpdate(arg: TargetStr, val: string, validateDuplicate:
         const kvPair = varInStr.map((str, index) => {
           return `val${index + 1}: ${str.replace(/^\${([^\}]+)\}$/, '$1')}`;
         });
-        finalReplaceVal = `I18N.template(${val}, { ${kvPair.join(',\n')} })`;
+        finalReplaceVal = `formatMessage({ id: '${val}' }, { ${kvPair.join(',\n')} })`;
 
         varInStr.forEach((str, index) => {
           finalReplaceText = finalReplaceText.replace(str, `{val${index + 1}}`);
@@ -70,7 +73,7 @@ export function replaceAndUpdate(arg: TargetStr, val: string, validateDuplicate:
     } else if (isVueFile) {
       edit.replace(document.uri, arg.range, '{{' + val + '}}');
     } else {
-      edit.replace(document.uri, arg.range, '{' + val + '}');
+      edit.replace(document.uri, arg.range, `{formatMessage({ id: '${val}' })}`);
     }
   }
 

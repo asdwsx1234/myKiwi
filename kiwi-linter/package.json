@@ -104,7 +104,7 @@
     "vscode:prepublish": "npm run compile",
     "compile": "tsc -p ./",
     "watch": "tsc -watch -p ./",
-    "postinstall": "node ../node_modules/vscode/bin/install",
+    "postinstall": "node ./node_modules/vscode/bin/install",
     "test": "npm run compile && node ./node_modules/vscode/bin/test"
   },
   "devDependencies": {
@@ -119,6 +119,7 @@
     "@babel/core": "^7.5.5",
     "@babel/types": "^7.5.5",
     "@vue/component-compiler-utils": "^3.1.1",
+    "axios": "^0.21.0",
     "find-in-files": "^0.5.0",
     "fs-extra": "^7.0.1",
     "globby": "^7.1.1",
@@ -129,7 +130,7 @@
     "randomstring": "^1.1.5",
     "slash2": "^2.0.0",
     "ts-node": "^6.0.3",
-    "typescript": "^2.8.3",
+    "typescript": "^3.5.1",
     "vue-template-compiler": "^2.6.11"
   }
 }
